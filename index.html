@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多普勒效应虚拟实验</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>多普勒效应虚拟实验</h1>
+            <div class="header-controls">
+                <button id="btn-play-pause" class="btn btn-primary" title="播放/暂停">
+                    <span class="icon-play">▶</span>
+                    <span class="icon-pause" style="display:none;">⏸</span>
+                </button>
+                <button id="btn-reset" class="btn btn-secondary" title="重置">重置</button>
+                <button id="btn-save" class="btn btn-secondary" title="保存场景">保存</button>
+                <button id="btn-load" class="btn btn-secondary" title="加载场景">加载</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <aside class="left-panel">
+                <section class="panel control-panel">
+                    <h2 class="panel-title">参数控制</h2>
+                    
+                    <div class="control-group">
+                        <h3>声源设置</h3>
+                        <div class="control-item">
+                            <label for="source-frequency">声源频率 (Hz)</label>
+                            <div class="slider-container">
+                                <input type="range" id="source-frequency" min="20" max="20000" step="1" value="440">
+                                <input type="number" id="source-frequency-num" min="20" max="20000" step="1" value="440">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="source-speed">声源速度 (m/s)</label>
+                            <div class="slider-container">
+                                <input type="range" id="source-speed" min="0" max="340" step="0.1" value="0">
+                                <input type="number" id="source-speed-num" min="0" max="340" step="0.1" value="0">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="source-direction">声源方向 (°)</label>
+                            <div class="slider-container">
+                                <input type="range" id="source-direction" min="0" max="360" step="1" value="0">
+                                <input type="number" id="source-direction-num" min="0" max="360" step="1" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>观察者设置</h3>
+                        <div class="control-item">
+                            <label for="observer-speed">观察者速度 (m/s)</label>
+                            <div class="slider-container">
+                                <input type="range" id="observer-speed" min="0" max="340" step="0.1" value="0">
+                                <input type="number" id="observer-speed-num" min="0" max="340" step="0.1" value="0">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="observer-direction">观察者方向 (°)</label>
+                            <div class="slider-container">
+                                <input type="range" id="observer-direction" min="0" max="360" step="1" value="0">
+                                <input type="number" id="observer-direction-num" min="0" max="360" step="1" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>环境设置</h3>
+                        <div class="control-item">
+                            <label for="sound-speed">声速 (m/s)</label>
+                            <div class="slider-container">
+                                <input type="range" id="sound-speed" min="200" max="400" step="1" value="340">
+                                <input type="number" id="sound-speed-num" min="200" max="400" step="1" value="340">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>预设场景</h3>
+                        <select id="preset-selector" class="preset-select">
+                            <option value="">-- 选择预设 --</option>
+                            <option value="approaching">声源接近观察者</option>
+                            <option value="receding">声源远离观察者</option>
+                            <option value="both-moving">两者相向运动</option>
+                            <option value="ambulance">救护车效应</option>
+                            <option value="sonic-boom">超音速演示</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="panel data-panel">
+                    <h2 class="panel-title">实时数据</h2>
+                    <div class="data-item">
+                        <span class="data-label">声源原始频率</span>
+                        <span class="data-value" id="data-source-freq">440 Hz</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">声源速度</span>
+                        <span class="data-value" id="data-source-velocity">0 m/s @ 0°</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">观察者速度</span>
+                        <span class="data-value" id="data-observer-velocity">0 m/s @ 0°</span>
+                    </div>
+                    <div class="data-item highlight">
+                        <span class="data-label">观察频率</span>
+                        <span class="data-value" id="data-observed-freq">440 Hz</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">频率变化</span>
+                        <span class="data-value" id="data-freq-change">0%</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">相对速度</span>
+                        <span class="data-value" id="data-relative-speed">0 m/s</span>
+                    </div>
+                </section>
+            </aside>
+
+            <section class="center-panel">
+                <div class="simulation-container">
+                    <canvas id="simulation-canvas"></canvas>
+                    <div class="canvas-overlay">
+                        <div class="legend">
+                            <div class="legend-item">
+                                <span class="legend-color source-color"></span>
+                                <span>声源</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color observer-color"></span>
+                                <span>观察者</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color wave-color"></span>
+                                <span>声波</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="drag-hint">拖拽声源或观察者移动位置</div>
+                </div>
+            </section>
+
+            <aside class="right-panel">
+                <section class="panel waveform-panel">
+                    <h2 class="panel-title">波形对比</h2>
+                    <div class="waveform-container">
+                        <div class="waveform-item">
+                            <span class="waveform-label">原始波形 (声源)</span>
+                            <canvas id="source-waveform"></canvas>
+                        </div>
+                        <div class="waveform-item">
+                            <span class="waveform-label">接收波形 (观察者)</span>
+                            <canvas id="observed-waveform"></canvas>
+                        </div>
+                    </div>
+                    <div class="waveform-controls">
+                        <label>
+                            <input type="checkbox" id="waveform-sync" checked>
+                            同步时间轴
+                        </label>
+                        <div class="zoom-control">
+                            <label for="waveform-zoom">缩放:</label>
+                            <input type="range" id="waveform-zoom" min="0.5" max="3" step="0.1" value="1">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel info-panel collapsible">
+                    <h2 class="panel-title clickable" data-toggle="principle-content">
+                        实验原理
+                        <span class="toggle-icon">▼</span>
+                    </h2>
+                    <div class="panel-content" id="principle-content">
+                        <div class="info-section">
+                            <h3>多普勒效应原理</h3>
+                            <p>多普勒效应是指当声源与观察者之间存在相对运动时，观察者接收到的声波频率与声源发出的频率不同的现象。</p>
+                        </div>
+                        <div class="info-section">
+                            <h3>计算公式</h3>
+                            <div class="formula">
+                                <p>f' = f × (v + v<sub>o</sub>) / (v - v<sub>s</sub>)</p>
+                            </div>
+                            <ul class="formula-legend">
+                                <li><strong>f'</strong> - 观察者接收到的频率</li>
+                                <li><strong>f</strong> - 声源原始频率</li>
+                                <li><strong>v</strong> - 声速</li>
+                                <li><strong>v<sub>o</sub></strong> - 观察者速度（靠近声源为正）</li>
+                                <li><strong>v<sub>s</sub></strong> - 声源速度（靠近观察者为正）</li>
+                            </ul>
+                        </div>
+                        <div class="info-section">
+                            <h3>典型情况</h3>
+                            <ul>
+                                <li><strong>声源接近:</strong> 频率升高，音调变高</li>
+                                <li><strong>声源远离:</strong> 频率降低，音调变低</li>
+                                <li><strong>观察者接近:</strong> 频率升高</li>
+                                <li><strong>观察者远离:</strong> 频率降低</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel guide-panel collapsible">
+                    <h2 class="panel-title clickable" data-toggle="guide-content">
+                        操作指南
+                        <span class="toggle-icon">▼</span>
+                    </h2>
+                    <div class="panel-content" id="guide-content">
+                        <div class="info-section">
+                            <h3>基本操作</h3>
+                            <ol>
+                                <li>使用左侧控制面板调节参数</li>
+                                <li>拖拽画布中的声源或观察者改变位置</li>
+                                <li>观察波形变化和实时数据</li>
+                                <li>使用预设场景快速体验典型情况</li>
+                            </ol>
+                        </div>
+                        <div class="info-section">
+                            <h3>控制面板说明</h3>
+                            <ul>
+                                <li><strong>声源频率:</strong> 设置声波的基础频率</li>
+                                <li><strong>声源速度/方向:</strong> 控制声源的运动</li>
+                                <li><strong>观察者速度/方向:</strong> 控制观察者的运动</li>
+                                <li><strong>声速:</strong> 模拟不同介质中的声速</li>
+                            </ul>
+                        </div>
+                        <div class="info-section">
+                            <h3>常见现象演示</h3>
+                            <ul>
+                                <li>选择"救护车效应"体验经典案例</li>
+                                <li>尝试将声源速度调至接近声速</li>
+                                <li>观察垂直运动时的频率变化</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+
+        <footer class="app-footer">
+            <p>多普勒效应虚拟实验 | 声速默认340m/s | 拖拽元素移动位置</p>
+        </footer>
+    </div>
+
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <h3>保存场景</h3>
+            <div class="modal-body">
+                <label for="scene-name">场景名称:</label>
+                <input type="text" id="scene-name" placeholder="输入场景名称">
+                <div class="saved-scenes">
+                    <h4>已保存的场景:</h4>
+                    <ul id="saved-scenes-list"></ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-confirm-save" class="btn btn-primary">保存</button>
+                <button id="btn-cancel-save" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="load-modal" class="modal">
+        <div class="modal-content">
+            <h3>加载场景</h3>
+            <div class="modal-body">
+                <div class="saved-scenes">
+                    <h4>选择要加载的场景:</h4>
+                    <ul id="load-scenes-list"></ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-confirm-load" class="btn btn-primary">加载</button>
+                <button id="btn-cancel-load" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <script src="js/doppler.js"></script>
+    <script src="js/waveform.js"></script>
+    <script src="js/simulation.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
